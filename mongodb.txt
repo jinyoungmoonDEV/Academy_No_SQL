@@ -1,0 +1,416 @@
+-mongodr server 시작 : mongod -dbpath c:mongoDB
+
+-gui program : mongodb compass program
+-compass 프로그램 실행 첫번쨰 메인 페이지 수정 : mongodb://localhost/
+
+-샤딩 => 분산저장 => 빅데이터
+
+-컬렉션은 관계형 데이터베이스의 테이블에 해당
+ex) db.createCollection(name, [options]) 
+
+-[](배열) 구조로 자료저장
+
+-contribs.? (index 이용하여 값 출력)
+
+-명령어s(
+find
+db
+show dbs
+use
+create 
+read 
+update
+delete
+insert
+)
+
+update 결과에 
+matchedCount :0, "modifiedCount:0 이면 조건 만족X
+-------------------------------------------------------------------------------------------
+
+db.movies.insertMany([
+{
+title: 'Titanic',
+year: 1997,
+awards:{
+wins: 127,
+nominations: 63,
+text: 'Won 11 Oscars.Another 116 wins & 63 nominations.'
+},
+cast:['Leonardo DiCaprio','Kate Winslet', 'Billy Zane', 'Kathy Bates']
+},
+{
+title: 'The Dark Knight',
+year: 2008,
+awards: {
+wins: 144,
+nominations: 106,
+text: 'Won 2 Oscars.Another 142 wins & 106 nominations.'
+},
+cast: ['Christian Bale', 'Heath Ledger', 'Aaron Eckhart', 'Michael Caine'],
+directors: ['Christopher Nolan']
+}    ])
+
+-위코드의 구조
+: ( [ { { }  } , { { } } ] ) 
+
+-----------------------------------------------------------------------------------------
+
+-find 는 select역할
+-(gt = grater than   (gt >), (ge >=), (lt <), (le <=))
+-따로 설정 안하면 자동적으로 _id로 기본키 지정
+
+db.movies.find( { } ) 보다 정렬되어 출력 db.movies.find().pretty()
+
+de.users.명령어One or Many -> One은 하나만 처리, Many는 전부다 처리
+
+------------------------------------------------------------------------------------------
+
+db.movies.find({"directors":"Christopher Nolan"})
+
+db.movies.find({"year":{ $in:[1997, 1998]} } )
+
+db.movies.find({"awards.wins":{$gt: 100}})//내장함수 사용할떈 함수앞에 $(QuerySelecter)꼭 입력....
+
+db.movies.find({},{"title": 1, "directors": 1, "year": 1});
+
+db.movies.find({},{"_id": 0, "title": 1, "genres": 1}); //0이면 출력X 1이면 출력O
+
+
+db.users.insertOne( //users collection 생성
+{
+name: "conan", //field: name, value:"conan" 
+age: 10,
+status: "S"
+}
+)
+
+
+db.users.find( //users collection 조회
+{age: {$gt: 9}},
+{name: 1, address:1}
+).limit(5)
+
+
+db.users.updateMany(//update users collection
+{age: {$gt: 9}},
+{ $set: {status : "reject"}}
+)
+
+
+db.users.deleteMany(//delete users collection
+{status : "reject"}
+)
+
+
+db.inventory.insertOne( //inventory collection insertOne으로 하나만 insert
+{item: "canvas",
+qty: 100,
+tags: ["cotton"],
+size: {h: 20, w: 30, uom: "cm"}
+}
+)
+
+db.inventory.find({item:"canvas"})inventory db 에서 item이 "canvas"인 것만 출력
+
+
+db.inventory.insertMany([//insertMany로 여러개의 데이터 삽입
+{ item: "note", qty:25,tags:["blank","red"],size:{h:14,w:21,uom:"cm"}},
+{ item: "mat", qty:85,tags:["gray"],size:{h:28,w:36,uom:"cm"}},
+{ item: "mousepad", qty:25,tags:["gel","blue"],size:{h:19,w:23,uom:"cm"}},
+])
+
+db.inventory.insertMany([
+{ item: "journal", qty:25,size:{h:14,w:21,uom:"cm"}, status:"A"},
+{ item: "notebook", qty:50,size:{h:9,w:11,uom:"in"}, status:"A"},
+{ item: "paper", qty:100,size:{h:9,w:11,uom:"in"}, status:"D"},
+{ item: "planner", qty:75,size:{h:23,w:30,uom:"cm"}, status:"D"},
+{ item: "postcard", qty:45,size:{h:10,w:16,uom:"cm"}, status:"A"},
+])
+
+db.inventory.find({})
+
+db.inventory.find({status:"D"})
+
+db.inventory.find({status:{$in:["A","D"]}})//in은 or효과
+
+db.inventory.find({status: "A", qty:{$lt: 30}})// $lt -> (lt : <), lt의 l은 'L'이다 ,  * ',' 는 AND 조건
+
+db.inventory.find({$or:[{status:"A",qty:{$lt:30}}]})//$or -> OR조건 
+
+
+db.inventory.find({//AND,OR조건 -> status="A" and (or {},{})
+status:"A",
+$or:[{qty:{$lt:30}},{item:/^p/}]// /^p/ ->p로 시작하는것, 끝나는 것일떄 -> /p$/
+})
+
+db.inventory.find({size:{h:14,w:21,uom:"cm"}})//size 조건이 맞는것만 출력
+
+db.inventory.find({"size.uom":"in"})
+
+db.inventory.find({"size.h":{$lt:15}})
+
+db.inventory.find({"size.h":{$lt:15},"size.uom":"in",status:"D"})size조건,and,and
+
+db.inventory.drop()
+
+db.inventory.insertMany([
+{ item: "journal", qty:25, tags:["blank","red"], dim_cm:[14,21]},
+{ item: "notebook", qty:50, tags:["red","blank"], dim_cm:[14,21]},
+{ item: "paper", qty:100, tags:["red","blank","plain"], dim_cm:[14,21]},
+{ item: "planner", qty:75, tags:["blank","red"], dim_cm:[23,30]},
+{ item: "postcard", qty:45, tags:["blue"], dim_cm:[10,15]}
+])
+
+db.inventory.find({tags:["red","blank"]})
+
+db.inventory.find({tags:{$all:["red","blank"]}})//순서 상관없이 같은 값있으면 모두 출력
+
+--------------------------------------------------------------------------------------------------------------
+
+
+db.inventory.insertMany( [
+{ item: "canvas", qty: 100, size: { h: 28, w: 35.5, uom: "cm" }, status: "A" },
+{ item: "journal", qty: 25, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+{ item: "mat", qty: 85, size: { h: 27.9, w: 35.5, uom: "cm" }, status: "A" },
+{ item: "mousepad", qty: 25, size: { h: 19, w: 22.85, uom: "cm" }, status: "P" },
+{ item: "notebook", qty: 50, size: { h: 8.5, w: 11, uom: "in" }, status: "P" },
+{ item: "paper", qty: 100, size: { h: 8.5, w: 11, uom: "in" }, status: "D" },
+{ item: "planner", qty: 75, size: { h: 22.85, w: 30, uom: "cm" }, status: "D" },
+{ item: "postcard", qty: 45, size: { h: 10, w: 15.25, uom: "cm" }, status: "A" },
+{ item: "sketchbook", qty: 80, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+{ item: "sketch pad", qty: 95, size: { h: 22.85, w: 30.5, uom: "cm" }, status: "A" }
+] );
+
+db.inventory.updateMany( //여러 도큐먼트 갱신
+{"qty":{$lt:50}}, //50보다 큰값을
+{
+$set:{"size.uom":"in", status:"P"}, //삽입
+$currentDate:{lastModified:true} //날짜 삽입
+}
+)
+
+db.inventory.replaceOne( //replace: 정보를 바꾼다
+{item:"paper"},
+{item:"paper", instock:[{warehouse:"A", qty:60}, {warehouse:"B", qty:40}]}
+)
+
+
+-------------------------------------------------------------------------------------------------------------
+// 실습
+db.student.insertMany([ 
+{  
+           name : "Mick",  
+           Course : "btech",  
+           batch_year : 2018,  
+           language : ["c++", "java", "python"],  
+           personal_details :   
+                     {  
+                      Father_name : "Jonny",  
+                      phone_no : 8895321456,  
+                      age : 23,  
+                      gender : "Male",  
+                      City : "NewYork",  
+                     }              
+}  ,
+{  
+           name : "Zoya",  
+           Course : "BCA",  
+           batch_year : 2020,  
+           language : ["C#", "JavaScript"],  
+           personal_details :   
+                     {  
+                      Father_name : "Henry",  
+                      phone_no : 9874563698,  
+                      age : 20,  
+                      gender : "Female",  
+                      City : "London",  
+                     }  
+}  ,
+{  
+           name : "Jonny",  
+           Course : "MCA",  
+           batch_year : 2019,  
+           language : ["C#", "java", "PHP"],  
+           personal_details :   
+                     {  
+                      "Father_name" : "Thomas",  
+                      "phone_no" : 7845123698,  
+                      "age" : 24,  
+                      "gender" : "Male",  
+                      "City" : "London",  
+                     }            
+}  ,
+{   
+           name : "Oliver",  
+           Course : "BA",  
+           batch_year : 2017,  
+           language : ["c", "PHP"],  
+           personal_details :   
+                     {  
+                      Father_name : "William",  
+                      phone_no : 9997845123,  
+                      age : 25,  
+                      gender : "Male",  
+                      City : "Liverpool",  
+                     }             
+}  ,
+{  
+           name : "Mia",  
+           Course : "btech",  
+           batch_year : 2020,  
+           language : ["HTML", "CSS", "PHP"],  
+           personal_details :   
+                     {  
+                      Father_name : "Leo",  
+                      phone_no : 6312547896,  
+                      age : 22,  
+                      gender : "Female",  
+                      City : "Manchester",  
+                     }             
+}])
+
+//이름이"Mick","Zoya","Mia"인 학생의  pending_fees를 12000으로 수정
+db.student.updateMany(
+{name: { $in: [ "Mick","Zoya","Mia" ] } },
+{$set : {pending_fees:12000}}
+)
+
+//3명의 학생만 조회
+db.student.find().limit(3)
+--------------------------------------------------------------------------------------------------------------------------
+//커서
+use foo
+
+for(i=0;i<100;i++){ //for문으로 foo컬렉션에 0부터 99까지 삽입
+db.foo.insertOne({x:i});
+}
+
+var cursor = db.foo.find(); //find 역할을 하는 커서 생성
+
+while(cursor.hasNext()){ //while문(다음으로 진행 할 수 있을떄)과 커서로 출력
+obj = cursor.next();
+print(obj.x);
+}
+
+//.sort({"?":1}) ->오름차순 -> 1, 내림차순 -> -1
+
+//.skip(n) -> n만큼 스킵하겠다
+
+//인덱싱
+:Query를 더욱 효율적으로 할 수 있도록 documents에 기준(key)을 정해 정렬된 목록생성
+
+//인덱스
+:DB의 검색을 빠르게 하기 위하여 데이터 순서를 미리 정해두는 과정
+
+use user
+
+for(i=0;i<500000;i++){
+db.user.insert({
+"userid" :i,
+"name":"user"+i,
+"age":Math.floor(Math.random()*100),
+"score":Math.floor(Math.random()*100),
+"time":new Date()
+});
+}
+
+db.user.find({score:"23"}).explain("executionStats").executionStats.executionTimeMillis
+
+db.user.find({score:"23"}).explain("executionStats")
+
+db.user.createIndex({score:1}) //인덱스 생성
+
+db.user.find({score:"23"}).explain("executionStats").executionStats.executionTimeMillis //1
+
+db.user.createIndex({userid:1, score:-1})
+
+db.user.getIndexes()//인덱스 조회
+
+db.user.dropIndex("userid_1_score_-1")
+---------------------------------------------------------------------------------------------------------------------------------------------
+//인덱스 연습문제
+
+//생성전
+db.user.find({userid:20300}).explain("executionStats").executionStats.executionTimeMillis //211
+db.user.find({score:53}).explain("executionStats").executionStats.executionTimeMillis //220
+db.user.find({userid:{$gt:3333}}).explain("executionStats").executionStats.executionTimeMillis //485
+db.user.find({userid:11111}).sort({score:1}).explain("executionStats").executionStats.executionTimeMillis //220
+db.user.find({userid:1222,score:{$gt:22}}).explain("executionStats").executionStats.executionTimeMillis// 220
+db.user.find({score:{$gt:22},age:22}).explain("executionStats").executionStats.executionTimeMillis //219
+db.user.find({userid:2222,score:{$gt:22},age:22}).explain("executionStats").executionStats.executionTimeMillis //239
+
+//생성후
+db.user.createIndex({userid:1}) //생성
+db.user.find({userid:20300}).explain("executionStats").executionStats.executionTimeMillis //1
+db.user.dropIndex("userid_1") //제거
+db.user.createIndex({score:1}) //생성
+db.user.find({score:53}).explain("executionStats").executionStats.executionTimeMillis //8
+db.user.dropIndex("score_1") //제거
+//이 경우는 인덱스 생성 안 하는것이 더 효율적
+db.user.find({userid:{$gt:3333}}).explain("executionStats").executionStats.executionTimeMillis //215
+db.user.createIndex({userid:1,score:1}) //생성
+db.user.find({userid:11111}).sort({score:1}).explain("executionStats").executionStats.executionTimeMillis //1
+db.user.dropIndex("userid_1_score_1") //제거
+db.user.createIndex({userid:1,score:1}) //생성
+db.user.find({userid:1222,score:{$gt:22}}).explain("executionStats").executionStats.executionTimeMillis// 1
+db.user.dropIndex("userid_1_score_1") //제거
+db.user.createIndex({score:1,age:1}) //생성
+db.user.find({score:{$gt:22},age:22}).explain("executionStats").executionStats.executionTimeMillis //16
+db.user.dropIndex("score_1_age_1") //제거
+db.user.createIndex({userid:1,score:1,age:1}) //생성
+db.user.find({userid:2222,score:{$gt:22},age:22}).explain("executionStats").executionStats.executionTimeMillis //1
+db.user.dropIndex("userid_1_score_1_age_1") //제거
+
+var cursor = db.user.find({},{"_id":0,"userid":1,"name":1,"age":1,"score":1}).sort({"userid":1}).limit(5).skip(50000)
+
+while(cursor.hasNext()){ 
+obj = cursor.next();
+print(obj.userid," ",obj.name," ",obj.age," ",obj.score);
+}
+
+var cursor = db.user.find({},{"_id":0,"userid":1,"name":1,"age":1,"score":1}).sort({"userid":1}).limit(5).skip(50000)
+
+while(cursor.hasNext()){ 
+obj = cursor.next();
+printjson(obj);
+}
+
+//텍스트 인덱스
+db.library.insert(
+[
+{_id:101,name:"Java", descroption:"By ABC"},
+{_id:102,name:"MongoDB", descroption:"By XYZ"},
+{_id:103,name:"Python", descroption:"By ABCD"},
+{_id:104,name:"Engineering Mathematics", descroption:"By *****"},
+{_id:105,name:"Salesforce", descroption:"By Salesforce"},
+])
+
+db.library.createIndex({name:"text"}) //생성
+db.library.find({$text: {$search: "Java"}})
+db.library.find({$text: {$search:"\"Java\""}})
+db.library.dropIndex("name_text") //제거
+
+//p.195부터
+db.neighborhoods.createIndex({location:"2dsphere"})
+
+db.restaurants.createIndex({location:"2dsphere"})
+
+db.neighborhoods.find({name:"Clinton"})
+
+db.neighborhoods.findOne({geometry:{$geoIntersects:{$geometry:{type:"Point",coordinates:[-73.93414657,40.82302903]}}}})
+
+var neighborhood = db.neighborhoods.findOne({geometry:{$geoIntersects:{$geometry:{type:"Point",coordinates:[-73.93414657,40.82302903]}}}})
+
+db.restaurants.find({
+location:{
+$geoWithin:{
+//앞에서 검색한 객체의 기하 구조를 사용한다.
+$geometry: neighborhood.geometry
+}
+}
+},
+//일치하는 레스토랑의 이름만 표시한다
+{name:1,_id:0});
+
+
